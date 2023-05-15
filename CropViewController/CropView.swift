@@ -113,7 +113,7 @@ open class CropView: UIView, UIScrollViewDelegate, UIGestureRecognizerDelegate, 
     fileprivate let bottomOverlayView = UIView()
     fileprivate var insetRect = CGRect.zero
     fileprivate var editingRect = CGRect.zero
-    fileprivate var interfaceOrientation = UIApplication.shared.statusBarOrientation
+    fileprivate var interfaceOrientation = UIApplication.shared.windows.first?.windowScene?.interfaceOrientation
     fileprivate var resizing = false
     fileprivate var usingCustomImageView = false
     fileprivate let MarginTop: CGFloat = 37.0
@@ -178,7 +178,8 @@ open class CropView: UIView, UIScrollViewDelegate, UIGestureRecognizerDelegate, 
     
     open override func layoutSubviews() {
         super.layoutSubviews()
-        let interfaceOrientation = UIApplication.shared.statusBarOrientation
+        //let interfaceOrientation = UIApplication.shared.statusBarOrientation
+        let interfaceOrientation = UIApplication.shared.windows.first?.windowScene?.interfaceOrientation
         
         if image == nil && imageView == nil {
             return
@@ -187,7 +188,7 @@ open class CropView: UIView, UIScrollViewDelegate, UIGestureRecognizerDelegate, 
         setupEditingRect()
 
         if imageView == nil {
-            if interfaceOrientation.isPortrait {
+            if interfaceOrientation?.isPortrait ?? false {
                 insetRect = bounds.insetBy(dx: MarginLeft, dy: MarginTop)
             } else {
                 insetRect = bounds.insetBy(dx: MarginLeft, dy: MarginLeft)
@@ -198,7 +199,7 @@ open class CropView: UIView, UIScrollViewDelegate, UIGestureRecognizerDelegate, 
             setupZoomingView()
             setupImageView()
         } else if usingCustomImageView {
-            if interfaceOrientation.isPortrait {
+            if interfaceOrientation?.isPortrait ?? false {
                 insetRect = bounds.insetBy(dx: MarginLeft, dy: MarginTop)
             } else {
                 insetRect = bounds.insetBy(dx: MarginLeft, dy: MarginLeft)
@@ -226,7 +227,7 @@ open class CropView: UIView, UIScrollViewDelegate, UIGestureRecognizerDelegate, 
     open func setRotationAngle(_ rotationAngle: CGFloat, snap: Bool) {
         var rotation = rotationAngle
         if snap {
-            rotation = nearbyint(rotationAngle / CGFloat(M_PI_2)) * CGFloat(M_PI_2)
+            rotation = nearbyint(rotationAngle / .pi) * .pi
         }
         self.rotationAngle = rotation
     }
@@ -256,8 +257,8 @@ open class CropView: UIView, UIScrollViewDelegate, UIGestureRecognizerDelegate, 
     open func zoomedCropRect() -> CGRect {
         let cropRect = convert(scrollView.frame, to: zoomingView)
         var ratio: CGFloat = 1.0
-        let orientation = UIApplication.shared.statusBarOrientation
-        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiom.pad || orientation.isPortrait) {
+        let orientation = UIApplication.shared.windows.first?.windowScene?.interfaceOrientation
+        if (UIDevice.current.userInterfaceIdiom == UIUserInterfaceIdiom.pad || interfaceOrientation?.isPortrait ?? false) {
             ratio = AVMakeRect(aspectRatio: imageSize, insideRect: insetRect).width / imageSize.width
         } else {
             ratio = AVMakeRect(aspectRatio: imageSize, insideRect: insetRect).height / imageSize.height
@@ -303,8 +304,8 @@ open class CropView: UIView, UIScrollViewDelegate, UIGestureRecognizerDelegate, 
     }
     
     fileprivate func setupEditingRect() {
-        let interfaceOrientation = UIApplication.shared.statusBarOrientation
-        if interfaceOrientation.isPortrait {
+        let interfaceOrientation = UIApplication.shared.windows.first?.windowScene?.interfaceOrientation
+        if interfaceOrientation?.isPortrait ?? false {
             editingRect = bounds.insetBy(dx: MarginLeft, dy: MarginTop)
         } else {
             editingRect = bounds.insetBy(dx: MarginLeft, dy: MarginLeft)
